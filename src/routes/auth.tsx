@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { SiteHeader } from "@/components/site";
+import { GoogleIcon } from "@/components/google-sign-in";
 import { tryPublishPendingDraft } from "@/lib/request-draft";
 import { resumeClientFlow } from "@/lib/student-need";
 
@@ -309,8 +310,9 @@ function AuthPage() {
           <button
             type="button"
             onClick={google}
-            className="w-full rounded-xl border border-border py-3 text-sm font-semibold hover:bg-muted"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm font-semibold hover:bg-muted"
           >
+            <GoogleIcon className="size-4" />
             Continuer avec Google
           </button>
           <button
