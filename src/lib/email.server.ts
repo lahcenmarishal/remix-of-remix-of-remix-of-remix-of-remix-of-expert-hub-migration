@@ -4,6 +4,7 @@
  */
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
+const RESEND_GATEWAY_ENDPOINT = "https://connector-gateway.lovable.dev/resend/emails";
 
 export const SITE_NAME = "ProFinder";
 export const FROM_EMAIL = `ProFinder <notifications@profinder.ma>`;
@@ -19,21 +20,29 @@ export type SendEmailInput = {
 };
 
 export async function sendEmail(input: SendEmailInput): Promise<{ sent: boolean; id?: string; reason?: string }> {
-  const apiKey = process.env["RESEND_SECRET"] ?? process.env["RESEND_API_KEY"];
-  if (!apiKey) {
-    console.error("[email] RESEND_SECRET manquant");
+  const lovableApiKey = process.env["LOVABLE_API_KEY"];
+  const resendConnectionKey = process.env["RESEND_API_KEY"];
+  const directResendKey = process.env["RESEND_SECRET"];
+  const useGateway = Boolean(lovableApiKey && resendConnectionKey);
+  if (!useGateway && !directResendKey) {
+    console.error("[email] Connexion Resend indisponible");
     return { sent: false, reason: "missing_api_key" };
   }
 
   const recipients = (Array.isArray(input.to) ? input.to : [input.to]).filter(Boolean);
   if (recipients.length === 0) return { sent: false, reason: "no_recipient" };
 
-  const response = await fetch(RESEND_ENDPOINT, {
+  const headers = new Headers({ "content-type": "application/json" });
+  if (useGateway) {
+    headers.set("authorization", `Bearer ${lovableApiKey}`);
+    headers.set("x-connection-api-key", resendConnectionKey ?? "");
+  } else {
+    headers.set("authorization", `Bearer ${directResendKey}`);
+  }
+
+  const response = await fetch(useGateway ? RESEND_GATEWAY_ENDPOINT : RESEND_ENDPOINT, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${apiKey}`,
-    },
+    headers,
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: recipients,
