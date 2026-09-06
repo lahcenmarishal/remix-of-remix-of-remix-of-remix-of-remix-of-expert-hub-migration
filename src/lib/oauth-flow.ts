@@ -65,3 +65,14 @@ export function roleFromUser(
   if (meta === "pro" || meta === "client") return meta;
   return localPendingRole() ?? fallback;
 }
+
+/** Lit le marqueur sans le consommer. */
+export function peekOAuthPending(): AccountRole | null {
+  try {
+    const value = sessionStorage.getItem(PENDING_OAUTH_KEY);
+    if (!value) return null;
+    return value === "pro" ? "pro" : "client";
+  } catch {
+    return null;
+  }
+}
