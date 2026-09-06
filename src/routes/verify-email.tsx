@@ -7,6 +7,8 @@ import { SiteHeader } from "@/components/site";
 import { publishPendingDraft } from "@/lib/request-draft";
 import { resumeClientFlow } from "@/lib/student-need";
 import { resolveAccountRole } from "@/lib/pending-role";
+import { sendWelcomeOnce } from "@/lib/welcome-email";
+
 
 
 type State = "checking" | "verified" | "already" | "expired" | "invalid";
@@ -47,7 +49,9 @@ function VerifyEmailPage() {
       toast.message("Session en cours d'activation. Réouvrez le lien de vérification si nécessaire.");
       return;
     }
+    void sendWelcomeOnce(data.session.user.id);
     if ((await resolveAccountRole(search.role)) === "pro") {
+
       navigate({ to: "/pro/inscription" });
       return;
     }
