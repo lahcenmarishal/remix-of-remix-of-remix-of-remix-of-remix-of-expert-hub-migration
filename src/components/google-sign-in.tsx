@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable/index";
 
-function GoogleIcon({ className }: { className?: string }) {
+export function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path
