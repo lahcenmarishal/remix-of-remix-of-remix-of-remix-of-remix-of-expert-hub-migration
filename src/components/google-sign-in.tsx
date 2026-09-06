@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable/index";
+import { markOAuthPending } from "@/lib/oauth-flow";
 
 export function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -37,6 +38,7 @@ export function GoogleSignInButton({
   const signIn = async () => {
     setBusy(true);
     try {
+      markOAuthPending("client");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
