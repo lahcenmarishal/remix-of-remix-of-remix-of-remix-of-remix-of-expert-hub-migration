@@ -73,8 +73,44 @@ export const notifyNewRequest = createServerFn({ method: "POST" })
     if (rows.length === 0) return { notified: 0 };
 
     await supabaseAdmin.from("notifications").insert(rows);
+
+    const { emailTemplates, sendEmail, SITE_URL } = await import("@/lib/email.server");
+    const emails = await resolveEmails(
+      supabaseAdmin,
+      rows.map((r) => r.user_id),
+    );
+    if (emails.length > 0) {
+      const tpl = emailTemplates.newRequestForPro({
+        requestUrl: `${SITE_URL}${link}`,
+        direct: Boolean(request.target_professional_id),
+      });
+      await Promise.all(
+        emails.map((to) => sendEmail({ to, subject: tpl.subject, html: tpl.html })),
+      );
+    }
+
     return { notified: rows.length };
   });
+
+/** Récupère les adresses email des comptes concernés (via l'API admin). */
+async function resolveEmails(
+  admin: { auth: { admin: { getUserById: (id: string) => Promise<{ data: { user: { email?: string | null } | null } }> } } },
+  userIds: string[],
+): Promise<string[]> {
+  const unique = [...new Set(userIds)];
+  const results = await Promise.all(
+    unique.map(async (id) => {
+      try {
+        const { data } = await admin.auth.admin.getUserById(id);
+        return data.user?.email ?? null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return results.filter((email): email is string => Boolean(email));
+}
+
 
 /** Notifie l'élève qu'un professeur est intéressé par sa demande. */
 export const notifyProposal = createServerFn({ method: "POST" })
@@ -102,5 +138,33 @@ export const notifyProposal = createServerFn({ method: "POST" })
       body: `${pro?.display_name ?? "Un professeur"} est intéressé par votre demande.`,
       link: `/demandes/${request.id}`,
     });
+
+    const { emailTemplates, sendEmail, SITE_URL } = await import("@/lib/email.server");
+    const [to] = await resolveEmails(supabaseAdmin, [request.client_id]);
+    if (to) {
+      const tpl = emailTemplates.proposalForClient({
+        proName: pro?.display_name ?? "Un professeur",
+        requestUrl: `${SITE_URL}/demandes/${request.id}`,
+      });
+      await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+    }
+
     return { notified: 1 };
   });
+
+/** Email de bienvenue envoyé après la confirmation du compte. */
+export const sendWelcomeEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    const email = data.user?.email;
+    if (!email) return { sent: false };
+
+    const { emailTemplates, sendEmail } = await import("@/lib/email.server");
+    const meta = (data.user?.user_metadata ?? {}) as { first_name?: string; full_name?: string };
+    const tpl = emailTemplates.welcome(meta.first_name ?? meta.full_name);
+    const result = await sendEmail({ to: email, subject: tpl.subject, html: tpl.html });
+    return { sent: result.sent };
+  });
+
