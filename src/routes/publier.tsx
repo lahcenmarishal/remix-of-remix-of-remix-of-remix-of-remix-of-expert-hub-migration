@@ -67,9 +67,9 @@ export const Route = createFileRoute("/publier")({
         content:
           "Publiez votre demande gratuitement et comparez les propositions de professeurs particuliers.",
       },
-      { property: "og:image", content: "https://expert-migrator-buddy.lovable.app/og-default.jpg" },
+      { property: "og:image", content: "https://profinder.ma/og-default.jpg" },
       { property: "og:image:alt", content: "ProFinder — cours particuliers au Maroc" },
-      { name: "twitter:image", content: "https://expert-migrator-buddy.lovable.app/og-default.jpg" },
+      { name: "twitter:image", content: "https://profinder.ma/og-default.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:locale", content: "fr_MA" },
       { property: "og:type", content: "website" },
