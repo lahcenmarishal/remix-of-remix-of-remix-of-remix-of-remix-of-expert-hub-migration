@@ -328,6 +328,7 @@ export function SiteHeader({ variant: variantProp }: { variant?: SiteVariant }) 
             </button>
           ) : (
             <>
+              <GoogleSignInButton className="hidden lg:inline-flex" />
               <Link to="/auth" search={{ mode: "signin", role: "client" }} className={linkClass}>
                 <UserRound className="size-4" />
                 Se connecter
@@ -401,6 +402,10 @@ export function SiteHeader({ variant: variantProp }: { variant?: SiteVariant }) 
               </button>
             ) : (
               <div className="mt-3 flex flex-col gap-2">
+                <GoogleSignInButton
+                  className="w-full"
+                  onSuccess={() => setOpen(false)}
+                />
                 <Link
                   to="/auth"
                   search={{ mode: "signin", role: "client" }}
