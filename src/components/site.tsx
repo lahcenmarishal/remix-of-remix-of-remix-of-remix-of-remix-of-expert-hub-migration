@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   BookOpen,
-  
-  
   ClipboardList,
   GraduationCap,
   Home,
@@ -22,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import logoUrl from "@/assets/logo.png";
 import { ProReviewNudge } from "@/components/review-floating";
+import { GoogleSignInButton } from "@/components/google-sign-in";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 
 export type SiteVariant = "public" | "client" | "pro" | "admin";
