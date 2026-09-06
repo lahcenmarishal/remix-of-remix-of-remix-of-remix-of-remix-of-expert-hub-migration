@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageProvider, langFromPath } from "@/lib/i18n";
 import { NotFoundPage } from "@/components/not-found";
+import { OAuthReturnHandler } from "@/components/oauth-return";
 
 const NotFoundComponent = NotFoundPage;
 
@@ -153,6 +154,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <OAuthReturnHandler />
         <Outlet />
         <Toaster />
       </LanguageProvider>
