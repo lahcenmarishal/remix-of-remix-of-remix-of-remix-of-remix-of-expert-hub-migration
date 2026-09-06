@@ -2,9 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { SiteHeader } from "@/components/site";
 import { GoogleIcon } from "@/components/google-sign-in";
+import { signInWithGoogle } from "@/lib/google-oauth";
 import {
   consumeOAuthPending,
   markOAuthPending,
@@ -147,9 +147,7 @@ function AuthPage() {
   const google = async () => {
     rememberRole();
     markOAuthPending(role);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
+    const result = await signInWithGoogle();
     if (result.error) {
       consumeOAuthPending();
       toast.error("Connexion Google impossible. Veuillez réessayer.");

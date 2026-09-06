@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { lovable } from "@/integrations/lovable/index";
+import { signInWithGoogle } from "@/lib/google-oauth";
 import { markOAuthPending } from "@/lib/oauth-flow";
 
 export function GoogleIcon({ className }: { className?: string }) {
@@ -39,9 +39,7 @@ export function GoogleSignInButton({
     setBusy(true);
     try {
       markOAuthPending("client");
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
+      const result = await signInWithGoogle();
       if (result.error) {
         toast.error("Connexion Google impossible");
         return;
