@@ -21,4 +21,4 @@ Allow: /images/
 Allow: /*.js$
 Allow: /*.css$
 
-Sitemap: https://expert-migrator-buddy.lovable.app/sitemap.xml
+Sitemap: https://profinder.ma/sitemap.xml

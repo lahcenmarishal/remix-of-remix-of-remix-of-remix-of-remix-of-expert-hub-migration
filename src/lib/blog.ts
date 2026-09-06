@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const SITE_URL = "https://expert-migrator-buddy.lovable.app";
+export const SITE_URL = "https://profinder.ma";
 
 export type BlogLang = "fr" | "ar";
 
