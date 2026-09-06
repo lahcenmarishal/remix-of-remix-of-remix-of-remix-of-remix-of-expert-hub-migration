@@ -5,6 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { SiteHeader } from "@/components/site";
 import { GoogleIcon } from "@/components/google-sign-in";
+import {
+  consumeOAuthPending,
+  markOAuthPending,
+  resolvePostAuthTarget,
+  roleFromUser,
+} from "@/lib/oauth-flow";
 import { tryPublishPendingDraft } from "@/lib/request-draft";
 import { resumeClientFlow } from "@/lib/student-need";
 
@@ -140,20 +146,34 @@ function AuthPage() {
 
   const google = async () => {
     rememberRole();
+    markOAuthPending(role);
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
     if (result.error) {
-      toast.error("Connexion Google impossible");
+      consumeOAuthPending();
+      toast.error("Connexion Google impossible. Veuillez réessayer.");
       return;
     }
     if (result.redirected) return;
-    if (isPro) {
-      navigate({ to: "/pro/inscription" });
+    // Session déjà établie (popup) : on route sans attendre le retour de page.
+    const { data } = await supabase.auth.getUser();
+    const user = data.user;
+    if (!user) {
+      navigate({ to: "/demandes" });
       return;
     }
-    const { data } = await supabase.auth.getUser();
-    if (data.user) await goClientHome(data.user.id);
+    consumeOAuthPending();
+    const target = await resolvePostAuthTarget(
+      user.id,
+      roleFromUser(user.user_metadata ?? undefined, role),
+    );
+    if (target.kind === "pro") navigate({ to: "/pro" });
+    else if (target.kind === "pro-onboarding") navigate({ to: "/pro/inscription" });
+    else if (target.kind === "request") {
+      if (target.published) toast.success("🎉 Votre demande a été publiée !");
+      navigate({ to: "/demandes/$id", params: { id: target.id } });
+    } else if (target.kind === "need") navigate({ to: "/mon-besoin" });
     else navigate({ to: "/demandes" });
   };
 
