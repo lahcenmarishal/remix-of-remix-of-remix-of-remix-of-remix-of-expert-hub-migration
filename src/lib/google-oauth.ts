@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import type { AccountRole } from "@/lib/pending-role";
 
 type GoogleOAuthResult =
   | { error: null; redirected: true }
@@ -19,7 +20,9 @@ function usesLovableOAuthBroker(hostname: string) {
  * Lovable-hosted previews provide /~oauth/initiate. External hosts such as
  * Netlify do not, so they must start Google OAuth directly through auth.
  */
-export async function signInWithGoogle(): Promise<GoogleOAuthResult> {
+export async function signInWithGoogle(
+  role: AccountRole = "client",
+): Promise<GoogleOAuthResult> {
   const origin = window.location.origin;
 
   if (usesLovableOAuthBroker(window.location.hostname)) {
@@ -29,7 +32,7 @@ export async function signInWithGoogle(): Promise<GoogleOAuthResult> {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth?mode=signin&role=client`,
+      redirectTo: `${origin}/auth?mode=signin&role=${role}`,
       queryParams: { prompt: "select_account" },
     },
   });

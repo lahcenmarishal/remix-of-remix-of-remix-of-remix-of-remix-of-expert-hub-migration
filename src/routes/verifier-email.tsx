@@ -8,8 +8,6 @@ import { OnboardingProgress } from "@/components/onboarding-progress";
 import { tryPublishPendingDraft } from "@/lib/request-draft";
 import { resumeClientFlow } from "@/lib/student-need";
 import { resolveAccountRole } from "@/lib/pending-role";
-import { sendWelcomeOnce } from "@/lib/welcome-email";
-
 
 const RESEND_KEY = "profinder.last_verification_send";
 const PENDING_ROLE_KEY = "profinder.pending_role";
@@ -62,9 +60,7 @@ function PendingEmailPage() {
       toast.message("Ouvrez le lien reçu par email pour activer votre session automatiquement.");
       return;
     }
-    void sendWelcomeOnce(data.session.user.id);
     if ((await resolveAccountRole(pendingRole())) === "pro") {
-
       navigate({ to: "/pro/inscription" });
       return;
     }

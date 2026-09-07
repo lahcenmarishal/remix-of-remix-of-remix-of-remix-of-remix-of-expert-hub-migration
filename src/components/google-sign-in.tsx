@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { signInWithGoogle } from "@/lib/google-oauth";
 import { markOAuthPending } from "@/lib/oauth-flow";
+import { rememberPendingRole, type AccountRole } from "@/lib/pending-role";
 
 export function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -28,9 +29,11 @@ export function GoogleIcon({ className }: { className?: string }) {
 
 export function GoogleSignInButton({
   className = "",
+  role = "client",
   onSuccess,
 }: {
   className?: string;
+  role?: AccountRole;
   onSuccess?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -38,8 +41,9 @@ export function GoogleSignInButton({
   const signIn = async () => {
     setBusy(true);
     try {
-      markOAuthPending("client");
-      const result = await signInWithGoogle();
+      rememberPendingRole(role);
+      markOAuthPending(role);
+      const result = await signInWithGoogle(role);
       if (result.error) {
         toast.error("Connexion Google impossible");
         return;
