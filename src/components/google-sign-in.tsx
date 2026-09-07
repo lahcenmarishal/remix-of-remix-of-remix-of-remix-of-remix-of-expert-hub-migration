@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { signInWithGoogle } from "@/lib/google-oauth";
 import { markOAuthPending } from "@/lib/oauth-flow";
+import { rememberPendingRole, type AccountRole } from "@/lib/pending-role";
 
 export function GoogleIcon({ className }: { className?: string }) {
   return (
