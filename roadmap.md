@@ -1,6 +1,8 @@
 # Roadmap ProFinder
 
 ## Fait
+- [x] Inscription Google finalisée : création idempotente du profil élève ou de
+      la fiche professeur brouillon, puis reprise automatique à l'étape 2
 - [x] Données de référence réinjectées après le remix (villes + noms arabes complets,
       catégories, niveaux, spécialités, matières, plans d'abonnement, réglages)
 - [x] Architecture SEO locale dynamique pour tout le Maroc

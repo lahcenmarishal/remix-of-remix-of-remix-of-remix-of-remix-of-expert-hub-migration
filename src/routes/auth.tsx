@@ -7,9 +7,9 @@ import { GoogleIcon } from "@/components/google-sign-in";
 import { signInWithGoogle } from "@/lib/google-oauth";
 import {
   consumeOAuthPending,
+  ensureOAuthAccount,
   markOAuthPending,
   resolvePostAuthTarget,
-  roleFromUser,
 } from "@/lib/oauth-flow";
 import { tryPublishPendingDraft } from "@/lib/request-draft";
 import { resumeClientFlow } from "@/lib/student-need";
@@ -162,10 +162,8 @@ function AuthPage() {
       return;
     }
     consumeOAuthPending();
-    const target = await resolvePostAuthTarget(
-      user.id,
-      roleFromUser(user.user_metadata ?? undefined, role),
-    );
+    const accountRole = await ensureOAuthAccount(user, role);
+    const target = await resolvePostAuthTarget(user.id, accountRole);
     if (target.kind === "pro") navigate({ to: "/pro" });
     else if (target.kind === "pro-onboarding") navigate({ to: "/pro/inscription" });
     else if (target.kind === "request") {

@@ -4,9 +4,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   consumeOAuthPending,
+  ensureOAuthAccount,
   peekOAuthPending,
   resolvePostAuthTarget,
-  roleFromUser,
 } from "@/lib/oauth-flow";
 
 /**
@@ -21,48 +21,35 @@ export function OAuthReturnHandler() {
     let cancelled = false;
 
     const finish = async () => {
-      const { data } = await supabase.auth.getUser();
-      const user = data.user;
-      if (!user || cancelled) return;
-      const expected = consumeOAuthPending();
-      if (!expected) return;
+      try {
+        const { data } = await supabase.auth.getUser();
+        const user = data.user;
+        if (!user || cancelled) return;
+        const expected = consumeOAuthPending();
+        if (!expected) return;
 
-      const role = roleFromUser(user.user_metadata ?? undefined, expected);
-
-      // Fiche profil garantie (nom + photo Google) pour la messagerie et les avis.
-      const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-      const fullName =
-        (typeof meta["full_name"] === "string" && meta["full_name"]) ||
-        (typeof meta["name"] === "string" && meta["name"]) ||
-        null;
-      const avatar =
-        (typeof meta["avatar_url"] === "string" && meta["avatar_url"]) ||
-        (typeof meta["picture"] === "string" && meta["picture"]) ||
-        null;
-      await supabase.from("profiles").upsert({
-        id: user.id,
-        ...(fullName ? { full_name: fullName } : {}),
-        ...(avatar ? { avatar_url: avatar } : {}),
-      });
-
-      const target = await resolvePostAuthTarget(user.id, role);
-      if (cancelled) return;
-      switch (target.kind) {
-        case "pro":
-          navigate({ to: "/pro" });
-          break;
-        case "pro-onboarding":
-          navigate({ to: "/pro/inscription" });
-          break;
-        case "request":
-          if (target.published) toast.success("🎉 Votre demande a été publiée !");
-          navigate({ to: "/demandes/$id", params: { id: target.id } });
-          break;
-        case "need":
-          navigate({ to: "/mon-besoin" });
-          break;
-        default:
-          navigate({ to: "/demandes" });
+        const role = await ensureOAuthAccount(user, expected);
+        const target = await resolvePostAuthTarget(user.id, role);
+        if (cancelled) return;
+        switch (target.kind) {
+          case "pro":
+            navigate({ to: "/pro" });
+            break;
+          case "pro-onboarding":
+            navigate({ to: "/pro/inscription" });
+            break;
+          case "request":
+            if (target.published) toast.success("🎉 Votre demande a été publiée !");
+            navigate({ to: "/demandes/$id", params: { id: target.id } });
+            break;
+          case "need":
+            navigate({ to: "/mon-besoin" });
+            break;
+          default:
+            navigate({ to: "/demandes" });
+        }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Création du compte impossible");
       }
     };
 
