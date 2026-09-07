@@ -4,9 +4,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   consumeOAuthPending,
+  ensureOAuthAccount,
   peekOAuthPending,
   resolvePostAuthTarget,
-  roleFromUser,
 } from "@/lib/oauth-flow";
 
 /**
@@ -27,23 +27,7 @@ export function OAuthReturnHandler() {
       const expected = consumeOAuthPending();
       if (!expected) return;
 
-      const role = roleFromUser(user.user_metadata ?? undefined, expected);
-
-      // Fiche profil garantie (nom + photo Google) pour la messagerie et les avis.
-      const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-      const fullName =
-        (typeof meta["full_name"] === "string" && meta["full_name"]) ||
-        (typeof meta["name"] === "string" && meta["name"]) ||
-        null;
-      const avatar =
-        (typeof meta["avatar_url"] === "string" && meta["avatar_url"]) ||
-        (typeof meta["picture"] === "string" && meta["picture"]) ||
-        null;
-      await supabase.from("profiles").upsert({
-        id: user.id,
-        ...(fullName ? { full_name: fullName } : {}),
-        ...(avatar ? { avatar_url: avatar } : {}),
-      });
+      const role = await ensureOAuthAccount(user, expected);
 
       const target = await resolvePostAuthTarget(user.id, role);
       if (cancelled) return;
