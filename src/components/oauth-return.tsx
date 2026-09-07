@@ -21,32 +21,35 @@ export function OAuthReturnHandler() {
     let cancelled = false;
 
     const finish = async () => {
-      const { data } = await supabase.auth.getUser();
-      const user = data.user;
-      if (!user || cancelled) return;
-      const expected = consumeOAuthPending();
-      if (!expected) return;
+      try {
+        const { data } = await supabase.auth.getUser();
+        const user = data.user;
+        if (!user || cancelled) return;
+        const expected = consumeOAuthPending();
+        if (!expected) return;
 
-      const role = await ensureOAuthAccount(user, expected);
-
-      const target = await resolvePostAuthTarget(user.id, role);
-      if (cancelled) return;
-      switch (target.kind) {
-        case "pro":
-          navigate({ to: "/pro" });
-          break;
-        case "pro-onboarding":
-          navigate({ to: "/pro/inscription" });
-          break;
-        case "request":
-          if (target.published) toast.success("🎉 Votre demande a été publiée !");
-          navigate({ to: "/demandes/$id", params: { id: target.id } });
-          break;
-        case "need":
-          navigate({ to: "/mon-besoin" });
-          break;
-        default:
-          navigate({ to: "/demandes" });
+        const role = await ensureOAuthAccount(user, expected);
+        const target = await resolvePostAuthTarget(user.id, role);
+        if (cancelled) return;
+        switch (target.kind) {
+          case "pro":
+            navigate({ to: "/pro" });
+            break;
+          case "pro-onboarding":
+            navigate({ to: "/pro/inscription" });
+            break;
+          case "request":
+            if (target.published) toast.success("🎉 Votre demande a été publiée !");
+            navigate({ to: "/demandes/$id", params: { id: target.id } });
+            break;
+          case "need":
+            navigate({ to: "/mon-besoin" });
+            break;
+          default:
+            navigate({ to: "/demandes" });
+        }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Création du compte impossible");
       }
     };
 

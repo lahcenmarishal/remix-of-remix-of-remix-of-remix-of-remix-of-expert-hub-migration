@@ -120,10 +120,10 @@ export async function resolvePostAuthTarget(
   if (role === "pro") {
     const { data } = await supabase
       .from("professionals")
-      .select("id")
+      .select("id, onboarding_completed")
       .eq("user_id", userId)
       .maybeSingle();
-    return data ? { kind: "pro" } : { kind: "pro-onboarding" };
+    return data?.onboarding_completed ? { kind: "pro" } : { kind: "pro-onboarding" };
   }
 
   const publishedId = await tryPublishPendingDraft(userId);
