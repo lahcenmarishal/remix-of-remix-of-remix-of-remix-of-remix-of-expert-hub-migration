@@ -147,7 +147,7 @@ function AuthPage() {
   const google = async () => {
     rememberRole();
     markOAuthPending(role);
-    const result = await signInWithGoogle();
+    const result = await signInWithGoogle(role);
     if (result.error) {
       consumeOAuthPending();
       toast.error("Connexion Google impossible. Veuillez réessayer.");
