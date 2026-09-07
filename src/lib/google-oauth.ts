@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import type { AccountRole } from "@/lib/pending-role";
 
 type GoogleOAuthResult =
   | { error: null; redirected: true }
