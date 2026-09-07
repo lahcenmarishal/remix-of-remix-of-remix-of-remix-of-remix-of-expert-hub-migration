@@ -28,9 +28,11 @@ export function GoogleIcon({ className }: { className?: string }) {
 
 export function GoogleSignInButton({
   className = "",
+  role = "client",
   onSuccess,
 }: {
   className?: string;
+  role?: AccountRole;
   onSuccess?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -38,8 +40,9 @@ export function GoogleSignInButton({
   const signIn = async () => {
     setBusy(true);
     try {
-      markOAuthPending("client");
-      const result = await signInWithGoogle();
+      rememberPendingRole(role);
+      markOAuthPending(role);
+      const result = await signInWithGoogle(role);
       if (result.error) {
         toast.error("Connexion Google impossible");
         return;
