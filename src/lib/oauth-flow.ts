@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 import { tryPublishPendingDraft } from "@/lib/request-draft";
 import { resumeClientFlow } from "@/lib/student-need";
 import { localPendingRole, type AccountRole } from "@/lib/pending-role";
@@ -32,6 +33,84 @@ export type PostAuthTarget =
   | { kind: "request"; id: string; published: boolean }
   | { kind: "need" }
   | { kind: "requests" };
+
+function googleProfile(user: User) {
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const fullName =
+    (typeof meta["full_name"] === "string" && meta["full_name"]) ||
+    (typeof meta["name"] === "string" && meta["name"]) ||
+    null;
+  const avatarUrl =
+    (typeof meta["avatar_url"] === "string" && meta["avatar_url"]) ||
+    (typeof meta["picture"] === "string" && meta["picture"]) ||
+    null;
+  const parts = fullName?.trim().split(/\s+/) ?? [];
+  return {
+    fullName,
+    avatarUrl,
+    firstName: parts[0] ?? null,
+    lastName: parts.length > 1 ? parts.slice(1).join(" ") : null,
+  };
+}
+
+/**
+ * Termine la création du compte applicatif après Google. L'identité reste
+ * unique côté authentification ; cette fonction crée seulement les fiches
+ * Profinder manquantes et peut donc être rejouée sans doublon.
+ */
+export async function ensureOAuthAccount(user: User, requestedRole: AccountRole) {
+  const role = roleFromUser(user.user_metadata ?? undefined, requestedRole);
+  const identity = googleProfile(user);
+
+  const { error: profileError } = await supabase.from("profiles").upsert({
+    id: user.id,
+    ...(identity.fullName ? { full_name: identity.fullName } : {}),
+    ...(identity.avatarUrl ? { avatar_url: identity.avatarUrl } : {}),
+  });
+  if (profileError) throw profileError;
+
+  const metadataRole = user.user_metadata?.["role"];
+  if (metadataRole !== "pro" && metadataRole !== "client") {
+    const { error } = await supabase.auth.updateUser({ data: { role } });
+    if (error) throw error;
+  }
+
+  if (role === "pro") {
+    const { data: existing, error: lookupError } = await supabase
+      .from("professionals")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+
+    if (!existing) {
+      const { data: category, error: categoryError } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("is_active", true)
+        .order("sort")
+        .limit(1)
+        .maybeSingle();
+      if (categoryError) throw categoryError;
+      if (!category) throw new Error("Catalogue indisponible");
+
+      const { error: createError } = await supabase.from("professionals").insert({
+        user_id: user.id,
+        category_id: category.id,
+        display_name: identity.fullName || user.email || "Professeur",
+        first_name: identity.firstName,
+        last_name: identity.lastName,
+        email: user.email ?? null,
+        photo_url: identity.avatarUrl,
+        onboarding_step: 2,
+        status: "draft",
+      });
+      if (createError && createError.code !== "23505") throw createError;
+    }
+  }
+
+  return role;
+}
 
 /** Destination après une authentification réussie, selon le rôle et l'état du parcours. */
 export async function resolvePostAuthTarget(
