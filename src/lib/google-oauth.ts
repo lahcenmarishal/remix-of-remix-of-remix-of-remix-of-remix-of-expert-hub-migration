@@ -3,6 +3,7 @@ import { lovable } from "@/integrations/lovable/index";
 import type { AccountRole } from "@/lib/pending-role";
 
 const PUBLIC_SITE_URL = "https://profinder.ma";
+const OAUTH_RELAY_URL = "https://hub-mover-magic.lovable.app";
 
 type GoogleOAuthResult =
   | { error: null; redirected: true }
@@ -26,9 +27,10 @@ export async function signInWithGoogle(
   role: AccountRole = "client",
 ): Promise<GoogleOAuthResult> {
   const origin = window.location.origin;
-  const returnOrigin = usesLovableOAuthBroker(window.location.hostname)
-    ? origin
-    : PUBLIC_SITE_URL;
+  // The auth service currently allow-lists the Lovable published origin, not
+  // profinder.ma. Use it only as a same-project relay; the root script forwards
+  // the complete path, query and OAuth hash to the public domain immediately.
+  const returnOrigin = usesLovableOAuthBroker(window.location.hostname) ? origin : OAUTH_RELAY_URL;
   const returnUrl = `${returnOrigin}/auth?mode=signin&role=${role}`;
 
   if (usesLovableOAuthBroker(window.location.hostname)) {
