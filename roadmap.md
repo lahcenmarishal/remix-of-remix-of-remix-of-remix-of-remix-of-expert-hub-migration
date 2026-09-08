@@ -1,6 +1,8 @@
 # Roadmap ProFinder
 
 ## Fait
+- [x] Retour Google corrigé vers `profinder.ma` avec conservation du rôle choisi ;
+      l'ancienne adresse publiée relaie immédiatement les retours OAuth vers le domaine officiel
 - [x] Inscription Google finalisée : création idempotente du profil élève ou de
       la fiche professeur brouillon, puis reprise automatique à l'étape 2
 - [x] Données de référence réinjectées après le remix (villes + noms arabes complets,
@@ -35,6 +37,4 @@
       restent en `noindex` tant qu'aucune fiche complète n'existe (données de
       référence réinjectées : 161 villes, 1 catégorie, 23 niveaux, 91 spécialités,
       351 matières, 3 plans d'abonnement, fourchette de tarifs)
-- [ ] Remplacer l'adresse de référence temporaire `expert-migrator-buddy.lovable.app`
-      par le domaine définitif dès qu'il est branché (canonical, hreflang, sitemap, robots)
 - [ ] Avertissements sécurité préexistants : fonctions SECURITY DEFINER exécutables publiquement

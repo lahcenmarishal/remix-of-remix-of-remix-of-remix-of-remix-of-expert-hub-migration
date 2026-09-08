@@ -90,6 +90,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
+        children: `if(location.hostname==="hub-mover-magic.lovable.app"){location.replace("https://profinder.ma"+location.pathname+location.search+location.hash)}`,
+      },
+      {
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",

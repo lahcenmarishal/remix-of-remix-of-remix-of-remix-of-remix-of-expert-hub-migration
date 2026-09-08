@@ -2,6 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import type { AccountRole } from "@/lib/pending-role";
 
+const PUBLIC_SITE_URL = "https://profinder.ma";
+
 type GoogleOAuthResult =
   | { error: null; redirected: true }
   | { error: null; redirected?: false }
@@ -24,7 +26,10 @@ export async function signInWithGoogle(
   role: AccountRole = "client",
 ): Promise<GoogleOAuthResult> {
   const origin = window.location.origin;
-  const returnUrl = `${origin}/auth?mode=signin&role=${role}`;
+  const returnOrigin = usesLovableOAuthBroker(window.location.hostname)
+    ? origin
+    : PUBLIC_SITE_URL;
+  const returnUrl = `${returnOrigin}/auth?mode=signin&role=${role}`;
 
   if (usesLovableOAuthBroker(window.location.hostname)) {
     return lovable.auth.signInWithOAuth("google", { redirect_uri: returnUrl });
