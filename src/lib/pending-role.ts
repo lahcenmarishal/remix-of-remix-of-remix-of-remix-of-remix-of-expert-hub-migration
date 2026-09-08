@@ -22,6 +22,15 @@ export function rememberPendingRole(role: AccountRole) {
   }
 }
 
+/** Oublie le rôle mémorisé (une fois le compte créé et l'utilisateur routé). */
+export function clearPendingRole() {
+  try {
+    localStorage.removeItem(PENDING_ROLE_KEY);
+  } catch {
+    /* stockage indisponible */
+  }
+}
+
 /**
  * Rôle réel du compte : les métadonnées d'inscription font foi (elles suivent
  * l'utilisateur même si le lien de vérification est ouvert sur un autre
