@@ -5,28 +5,33 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   consumeOAuthPending,
   ensureOAuthAccount,
-  peekOAuthPending,
+  expectedOAuthRole,
   resolvePostAuthTarget,
 } from "@/lib/oauth-flow";
+import { clearPendingRole } from "@/lib/pending-role";
 
 /**
  * Redirige l'utilisateur vers le bon espace après un retour de connexion Google
- * (le fournisseur renvoie toujours sur l'origine du site).
+ * (le fournisseur renvoie toujours sur une page publique du site).
  */
 export function OAuthReturnHandler() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!peekOAuthPending()) return;
+    const expected = expectedOAuthRole();
+    if (!expected) return;
     let cancelled = false;
+    let done = false;
 
     const finish = async () => {
+      if (done) return;
       try {
         const { data } = await supabase.auth.getUser();
         const user = data.user;
         if (!user || cancelled) return;
-        const expected = consumeOAuthPending();
-        if (!expected) return;
+        done = true;
+        consumeOAuthPending();
+        clearPendingRole();
 
         const role = await ensureOAuthAccount(user, expected);
         const target = await resolvePostAuthTarget(user.id, role);

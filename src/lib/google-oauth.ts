@@ -24,15 +24,16 @@ export async function signInWithGoogle(
   role: AccountRole = "client",
 ): Promise<GoogleOAuthResult> {
   const origin = window.location.origin;
+  const returnUrl = `${origin}/auth?mode=signin&role=${role}`;
 
   if (usesLovableOAuthBroker(window.location.hostname)) {
-    return lovable.auth.signInWithOAuth("google", { redirect_uri: origin });
+    return lovable.auth.signInWithOAuth("google", { redirect_uri: returnUrl });
   }
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth?mode=signin&role=${role}`,
+      redirectTo: returnUrl,
       queryParams: { prompt: "select_account" },
     },
   });

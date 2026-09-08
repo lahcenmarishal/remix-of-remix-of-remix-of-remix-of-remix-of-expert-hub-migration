@@ -2,12 +2,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { tryPublishPendingDraft } from "@/lib/request-draft";
 import { resumeClientFlow } from "@/lib/student-need";
-import { localPendingRole, type AccountRole } from "@/lib/pending-role";
+import { localPendingRole, rememberPendingRole, type AccountRole } from "@/lib/pending-role";
 
 const PENDING_OAUTH_KEY = "profinder.pending_oauth";
 
 /** Mémorise qu'une connexion Google est en cours (avant la redirection). */
 export function markOAuthPending(role: AccountRole) {
+  rememberPendingRole(role);
   try {
     sessionStorage.setItem(PENDING_OAUTH_KEY, role);
   } catch {
@@ -135,23 +136,37 @@ export async function resolvePostAuthTarget(
   return { kind: "requests" };
 }
 
-/** Rôle réel du compte connecté (métadonnées d'inscription, sinon choix local). */
+/** Rôle réel du compte connecté (métadonnées d'inscription, sinon choix explicite). */
 export function roleFromUser(
   metadata: Record<string, unknown> | undefined,
   fallback: AccountRole,
 ): AccountRole {
   const meta = metadata?.["role"];
   if (meta === "pro" || meta === "client") return meta;
-  return localPendingRole() ?? fallback;
+  return fallback;
 }
 
 /** Lit le marqueur sans le consommer. */
 export function peekOAuthPending(): AccountRole | null {
   try {
     const value = sessionStorage.getItem(PENDING_OAUTH_KEY);
-    if (!value) return null;
-    return value === "pro" ? "pro" : "client";
+    if (value === "pro" || value === "client") return value;
   } catch {
-    return null;
+    /* stockage indisponible */
   }
+  return null;
+}
+
+/**
+ * Rôle attendu au retour de Google : paramètre d'URL (le plus fiable, il
+ * survit à un nouvel onglet), puis marqueur de session, puis choix local.
+ */
+export function expectedOAuthRole(): AccountRole | null {
+  try {
+    const param = new URLSearchParams(window.location.search).get("role");
+    if (param === "pro" || param === "client") return param;
+  } catch {
+    /* URL indisponible */
+  }
+  return peekOAuthPending() ?? localPendingRole();
 }
