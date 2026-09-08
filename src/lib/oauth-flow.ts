@@ -2,12 +2,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { tryPublishPendingDraft } from "@/lib/request-draft";
 import { resumeClientFlow } from "@/lib/student-need";
-import { localPendingRole, type AccountRole } from "@/lib/pending-role";
+import { localPendingRole, rememberPendingRole, type AccountRole } from "@/lib/pending-role";
 
 const PENDING_OAUTH_KEY = "profinder.pending_oauth";
 
 /** Mémorise qu'une connexion Google est en cours (avant la redirection). */
 export function markOAuthPending(role: AccountRole) {
+  rememberPendingRole(role);
   try {
     sessionStorage.setItem(PENDING_OAUTH_KEY, role);
   } catch {
